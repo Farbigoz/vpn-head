@@ -1,0 +1,12 @@
+# Управляется Ansible (vpn-head, роль common). Не редактировать вручную.
+Port {{ ssh_port }}
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+# Отключаем вход по паролю ТОЛЬКО после проверки входа по ключу
+# (параметр hardening_disable_password_auth в group_vars/all.yml).
+PasswordAuthentication {{ 'no' if hardening_disable_password_auth | bool else 'yes' }}
+KbdInteractiveAuthentication no
+X11Forwarding no
+AllowTcpForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2

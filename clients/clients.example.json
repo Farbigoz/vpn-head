@@ -1,0 +1,28 @@
+{
+  "deployment": {
+    "domain": "vpn.example.com",
+    "reality": {
+      "public_key": "ВСТАВЬТЕ_PUBLIC_KEY_ИЗ_3XUI",
+      "short_id": "ВСТАВЬТЕ_SHORT_ID",
+      "sni": "www.microsoft.com",
+      "fingerprint": "chrome"
+    },
+    "nodes": [
+      { "name": "n1", "fqdn": "n1.vpn.example.com", "vless_port": 443 },
+      { "name": "n2", "fqdn": "n2.vpn.example.com", "vless_port": 443 }
+    ]
+  },
+  "clients": [
+    {
+      "name": "user1-phone",
+      "uuid": "ВСТАВЬТЕ_UUID_КЛИЕНТА",
+      "mode": "pinned",
+      "preferred_node": "n1"
+    },
+    {
+      "name": "user2-laptop",
+      "uuid": "ВСТАВЬТЕ_UUID_КЛИЕНТА",
+      "mode": "failover"
+    }
+  ]
+}

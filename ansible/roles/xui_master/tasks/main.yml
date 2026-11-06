@@ -1,0 +1,36 @@
+---
+# 3x-ui master на дирижёре (та же зафиксированная версия, что на нодах).
+# Master управляет нодами через API/multi-node; сам трафик не пропускает.
+
+- name: Скачать установочный скрипт 3x-ui
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/MHSanaei/3x-ui/master/install.sh
+    dest: /tmp/xui-install.sh
+    mode: "0755"
+
+- name: Установить 3x-ui версии {{ xui_version }}
+  ansible.builtin.shell: printf 'n\n' | bash /tmp/xui-install.sh "v{{ xui_version }}"
+  args:
+    creates: /usr/local/x-ui/x-ui
+
+- name: Зафиксировать порт и секретный путь панели master
+  ansible.builtin.command: >-
+    /usr/local/x-ui/x-ui setting -port {{ xui_master_port }}
+    -webBasePath {{ xui_panel_path }}/
+  register: xui_master_setting
+  changed_when: xui_master_setting.rc == 0
+
+- name: Перезапустить и включить x-ui (master)
+  ansible.builtin.service:
+    name: x-ui
+    state: restarted
+    enabled: true
+
+- name: Удалить установочный скрипт
+  ansible.builtin.file:
+    path: /tmp/xui-install.sh
+    state: absent
+
+# TODO: перевод master на PostgreSQL (сейчас встроенная БД x-ui),
+# настройка учётной записи master через API (vault_xui_master_*),
+# интеграция acme.sh (DNS-01 REG.RU) для HTTPS панелей.

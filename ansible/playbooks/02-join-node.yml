@@ -1,0 +1,51 @@
+---
+# 02 — Подключение подготовленной ноды к master 3x-ui и восстановление
+# конфигурации заменяемой ноды (UUID клиентов, REALITY-ключи, порты,
+# Hysteria2, AWG).
+#
+# СТАТУС: заготовка. Требует проверки против конкретной версии 3x-ui API
+# ({{ xui_version }}) перед боевым применением.
+#
+# Принципы:
+# - база master целиком на ноду НЕ копируется — только штатный
+#   multi-node/API-механизм 3x-ui;
+# - источник конфигурации — резервная копия в backups/nodes/<нода>/
+#   на дирижёре (локально, в репозиторий не коммитится);
+# - восстановление возможно только если старый сервер не скомпрометирован.
+#
+# Запуск:
+#   ansible-playbook -i inventories/<имя>/hosts.yml playbooks/02-join-node.yml --limit n1
+
+- name: "02: подключение ноды к master и восстановление конфигурации"
+  hosts: vpn_nodes
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Проверить, что нода подготовлена (x-ui установлен)
+      ansible.builtin.stat:
+        path: /usr/local/x-ui/x-ui
+      register: xui_bin
+
+    - name: Остановиться, если 01-prepare-node не выполнялся
+      ansible.builtin.assert:
+        that: xui_bin.stat.exists
+        fail_msg: "Сначала выполните 01-prepare-node для этой ноды"
+
+    # TODO(проверить на тестовом VPS):
+    # 1. Аутентификация в API master 3x-ui (POST /login с vault-секретами),
+    #    endpoint панели master из group_vars/conductor.yml.
+    # 2. Регистрация ноды в master (multi-node API), передача:
+    #    node_fqdn, xui_panel_port, xui_panel_path, учётные данные панели ноды.
+    # 3. Восстановление инбаундов из backups/nodes/<node>/:
+    #    - VLESS+REALITY+Vision: UUID клиентов, private key REALITY,
+    #      short IDs, SNI, порт {{ vless_tcp_port }};
+    #    - VLESS+XHTTP: аналогично, порт {{ xhttp_port }};
+    #    - Hysteria2: пароль(и), порт {{ hysteria2_port }};
+    #    - AWG: server keys и peer-конфиги, порт {{ awg_port }}.
+    # 4. Включение инбаундов и проверка, что они видны в API ноды.
+    - name: TODO — регистрация в master и восстановление конфигурации
+      ansible.builtin.debug:
+        msg: >-
+          Заготовка: регистрация ноды в master и восстановление инбаундов
+          из backups/nodes/{{ inventory_hostname }}/. См. комментарии в плейбуке.

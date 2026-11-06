@@ -1,0 +1,8 @@
+---
+# Создано плейбуком 00-add-node ({{ ansible_date_time.date | default('') }}).
+vpn_nodes:
+  hosts:
+    {{ node_name }}:
+      ansible_host: {{ node_ip }}
+      ansible_user: {{ node_ssh_user | default('root') }}
+      node_fqdn: {{ node_fqdn }}

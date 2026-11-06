@@ -1,0 +1,19 @@
+# Карточка доступа к ноде (сгенерировано 01-prepare-node, {{ ansible_date_time.date }}).
+# Секретов здесь нет и быть не должно — учётные данные в Vault
+# (ansible-vault view inventories/<имя>/group_vars/all/vault.yml)
+# или в выводе scripts/show-access.py.
+node: {{ inventory_hostname }}
+fqdn: {{ node_fqdn }}
+ip: {{ ansible_host }}
+prepared_at: "{{ ansible_date_time.iso8601 }}"
+panel:
+  url: "http://{{ node_fqdn }}:{{ xui_panel_port }}/{{ xui_panel_path }}/"
+  note: "открыта только для conductor_ip (UFW); креды — vault_xui_node_user/vault_xui_node_password"
+profiles:
+  vless_reality: "tcp {{ vless_tcp_port }}"
+  vless_xhttp: "tcp {{ xhttp_port }}"
+  hysteria2: "udp {{ hysteria2_port }}"
+  awg: "udp {{ awg_port }}"
+next_steps:
+  - "02-join-node.yml --limit {{ inventory_hostname }}"
+  - "03-validate-node.yml --limit {{ inventory_hostname }} -e node_ip={{ ansible_host }}"

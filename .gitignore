@@ -1,0 +1,30 @@
+# Секреты и локальные данные
+.env
+vault-password*
+secrets/
+*.vault
+
+# Реальные инвентари (в git хранится только пример)
+inventories/*
+!inventories/example/
+
+# Клиентские конфиги и ключи
+clients/clients.json
+clients/output/
+
+# Карточки доступа к нодам
+reports/
+
+# Резервные копии (содержат ключи и БД)
+backups/
+
+# Ansible / Python
+*.retry
+.venv/
+__pycache__/
+*.pyc
+
+# Прочее
+*.log
+.DS_Store
+Thumbs.db

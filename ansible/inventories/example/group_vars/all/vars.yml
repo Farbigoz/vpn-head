@@ -1,0 +1,41 @@
+---
+# Общие параметры инфраструктуры (НЕ секреты).
+
+# Доменная зона, обслуживаемая у REG.RU
+infra_domain: "vpn.example.com"
+
+# Часовой пояс серверов
+timezone: "UTC"
+
+# Административный пользователь на нодах (создаётся ролью common)
+admin_user: "deploy"
+ssh_port: 22
+
+# ВАЖНО: отключение входа по паролю — только после проверки входа по ключу.
+# Порядок: прогнать 01-prepare-node с false, проверить ssh deploy@<нода>,
+# затем выставить true и прогнать плейбук повторно.
+hardening_disable_password_auth: false
+
+# Зафиксированная версия 3x-ui (ставится на ноды и master).
+# Перед первым применением сверьтесь с релизами:
+# https://github.com/MHSanaei/3x-ui/releases
+xui_version: "2.6.1"
+
+# Порт панели 3x-ui на ноде (открыт только для дирижёра)
+xui_panel_port: 2053
+xui_panel_path: "changeme-panel"   # секретный путь панели; задайте свой
+
+# Порты протоколов на нодах
+vless_tcp_port: 443      # VLESS + TCP/RAW + REALITY + Vision
+xhttp_port: 8443         # VLESS + XHTTP + REALITY (запасной)
+hysteria2_port: 443      # UDP
+awg_port: 51820          # UDP (AWG 3.1)
+
+# Fail2ban
+fail2ban_bantime: "1h"
+fail2ban_maxretry: 5
+fail2ban_findtime: "10m"
+
+# Публичные ключи администраторов — в vault.yml (vault_admin_ssh_public_keys)
+# либо задайте здесь списком, если ключи не считаете чувствительными:
+admin_ssh_public_keys: "{{ vault_admin_ssh_public_keys | default([]) }}"

@@ -1,0 +1,11 @@
+────────────────────────────────────────────────────────────
+ VPN-нода {{ node_fqdn | default(inventory_hostname) }}
+ Управляется инструментом vpn-head — не настраивать вручную.
+
+ Панель 3x-ui : порт {{ xui_panel_port }}, путь /{{ xui_panel_path }}/
+                (открыта только для дирижёра)
+ Профили      : VLESS tcp/{{ vless_tcp_port }} · XHTTP tcp/{{ xhttp_port }}
+                Hysteria2 udp/{{ hysteria2_port }} · AWG udp/{{ awg_port }}
+
+ Доступы и карточки нод: scripts/show-access.py на локальном ПК.
+────────────────────────────────────────────────────────────

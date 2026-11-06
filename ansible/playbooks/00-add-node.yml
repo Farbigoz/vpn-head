@@ -1,0 +1,49 @@
+---
+# 00a — Добавить ноду в инвентарь (создаёт nodes.d/<имя>.yml).
+# Основной сценарий — запуск из Web UI Semaphore: шаблон «Добавить ноду»
+# с survey-полями node_name / node_ip / node_fqdn / inventory_name.
+# Из терминала:
+#   ansible-playbook -i inventories/<имя> playbooks/00-add-node.yml \
+#     -e "inventory_name=<имя> node_name=n3 node_ip=203.0.113.30 node_fqdn=n3.vpn.example.com"
+#
+# После добавления: 01-prepare-node --limit <node_name> и далее по цепочке
+# (в Semaphore это единый workflow «Новая нода»).
+
+- name: "00a: добавить ноду в инвентарь"
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Проверить обязательные параметры
+      ansible.builtin.assert:
+        that:
+          - inventory_name is defined
+          - node_name is defined and node_name is match('^[a-z0-9-]+$')
+          - node_ip is defined
+          - node_fqdn is defined
+        fail_msg: >-
+          Нужны: inventory_name, node_name (a-z0-9-), node_ip, node_fqdn
+
+    - name: Проверить, что нода ещё не добавлена
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/nodes.d/{{ node_name }}.yml"
+      register: node_file
+
+    - name: Остановиться, если файл ноды уже существует
+      ansible.builtin.fail:
+        msg: "Нода {{ node_name }} уже есть в инвентаре ({{ node_file.stat.path }})."
+      when: node_file.stat.exists
+
+    - name: Создать файл ноды nodes.d/{{ node_name }}.yml
+      ansible.builtin.template:
+        src: templates/node-inventory.yml.j2
+        dest: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/nodes.d/{{ node_name }}.yml"
+        mode: "0644"
+
+    - name: Что дальше
+      ansible.builtin.debug:
+        msg: >-
+          Нода {{ node_name }} добавлена. Дальше: 01-prepare-node
+          --limit {{ node_name }} (в Semaphore это делается workflow
+          «Новая нода» автоматически). Не забудьте A-запись
+          {{ node_fqdn }} в REG.RU.
