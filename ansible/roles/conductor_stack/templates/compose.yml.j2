@@ -17,6 +17,10 @@ services:
       SEMAPHORE_ADMIN_NAME: "vpn-head admin"
       SEMAPHORE_ADMIN_EMAIL: "{{ semaphore_admin_email | default('admin@localhost') }}"
       SEMAPHORE_WEB_ROOT: "/"
+      # Репозиторий /repo смонтирован с хоста — git ругается на владельца
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: "safe.directory"
+      GIT_CONFIG_VALUE_0: "*"
     volumes:
       - semaphore-data:/var/lib/semaphore
       # Репозиторий vpn-head — шаблоны Ansible внутри Web UI
