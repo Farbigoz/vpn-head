@@ -165,7 +165,7 @@ def main() -> int:
             "vaults": [{"vault_key_id": vault_key["id"], "type": "password",
                         "name": "ansible-vault"}],
             "survey_vars": [
-                {"name": s, "title": s, "type": "string", "required": True}
+                {"name": s, "title": s, "type": "", "required": True}
                 for s in survey],
         })
         print(f"· Шаблон «{name}»: id={tpl_id}" if (tpl_id := tpl.get('id')) else f"· Шаблон «{name}»")
