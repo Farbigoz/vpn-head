@@ -90,7 +90,7 @@
     rule: allow
     proto: tcp
     port: "{{ xui_panel_port }}"
-    from_ip: "{{ xui_panel_allowed_from }}"
+    from_ip: "{{ xui_panel_allowed_from | default('127.0.0.1') }}"
   when: open_vpn_ports | default(true) | bool
 
 - name: Включить UFW с запретом входящих по умолчанию
