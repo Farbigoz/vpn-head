@@ -96,7 +96,15 @@ def main() -> int:
         found = next((i for i in items if i.get("name") == name), None)
         if found:
             return found
-        return sem._req("POST", f"/project/{pid}/{kind}", body)
+        created = sem._req("POST", f"/project/{pid}/{kind}", body)
+        if isinstance(created, dict) and created.get("id"):
+            return created
+        # Semaphore часто отвечает 204 без тела — перечитываем список
+        items = sem._req("GET", f"/project/{pid}/{kind}")
+        found = next((i for i in items if i.get("name") == name), None)
+        if not found:
+            raise SystemExit(f"Не удалось создать {kind}/{name}")
+        return found
 
     # Пустое окружение (обязательно для шаблонов в Semaphore v2.10+)
     env = find_or_create("environment", "default",
