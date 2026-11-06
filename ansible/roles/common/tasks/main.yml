@@ -5,6 +5,7 @@
 - name: Обновить кэш apt и установить базовые пакеты
   ansible.builtin.apt:
     name:
+      - sudo
       - ufw
       - fail2ban
       - curl
