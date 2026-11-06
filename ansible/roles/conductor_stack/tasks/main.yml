@@ -20,6 +20,16 @@
            true) }}
   no_log: true
 
+- name: Ключи шифрования Semaphore (генерируются однократно)
+  ansible.builtin.set_fact:
+    semaphore_cookie_hash: "{{ lookup('ansible.builtin.password',
+        '/root/.vpn-head/.sem_cookie_hash chars=hexdigits length=44') }}"
+    semaphore_cookie_encryption: "{{ lookup('ansible.builtin.password',
+        '/root/.vpn-head/.sem_cookie_enc chars=hexdigits length=32') }}"
+    semaphore_access_key_encryption: "{{ lookup('ansible.builtin.password',
+        '/root/.vpn-head/.sem_access_key_enc chars=hexdigits length=32') }}"
+  no_log: true
+
 - name: Развернуть docker-compose стека
   ansible.builtin.template:
     src: compose.yml.j2

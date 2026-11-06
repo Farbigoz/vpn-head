@@ -17,6 +17,11 @@ services:
       SEMAPHORE_ADMIN_NAME: "vpn-head admin"
       SEMAPHORE_ADMIN_EMAIL: "{{ semaphore_admin_email | default('admin@localhost') }}"
       SEMAPHORE_WEB_ROOT: "/"
+      # Ключи шифрования — фиксированные (иначе после пересоздания
+      # контейнера ключи в БД не расшифровываются)
+      SEMAPHORE_COOKIE_HASH: "{{ semaphore_cookie_hash }}"
+      SEMAPHORE_COOKIE_ENCRYPTION: "{{ semaphore_cookie_encryption }}"
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: "{{ semaphore_access_key_encryption }}"
       # Репозиторий /repo смонтирован с хоста — git ругается на владельца
       GIT_CONFIG_COUNT: "1"
       GIT_CONFIG_KEY_0: "safe.directory"
