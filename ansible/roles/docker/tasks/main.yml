@@ -1,13 +1,43 @@
 ---
-# Docker + compose plugin на дирижёре (для Semaphore и Uptime Kuma).
-# VERIFY: пакетные имена проверяются под Debian 13/12 и Ubuntu 22.04+;
-# на других дистрибутивах скорректируйте список.
+# Docker CE + compose-плагин из официального репозитория Docker.
+# Работает на Debian 12/13 и Ubuntu 22.04+ (репозиторий выбирается по
+# фактам ОС). Дистрибутивный docker.io намеренно не используется:
+# в Debian 13 нет docker-compose-v2-плагина.
 
-- name: Установить Docker и compose-плагин
+- name: Пакеты для добавления репозитория Docker
   ansible.builtin.apt:
     name:
-      - docker.io
-      - docker-compose-v2
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Ключ Docker APT
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+  register: docker_key
+
+- name: Репозиторий Docker
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ ansible_facts.architecture | replace('x86_64', 'amd64') }}
+      signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ ansible_facts.distribution | lower }}
+      {{ ansible_facts.distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Установить Docker CE и compose-плагин
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
     state: present
     update_cache: true
 
