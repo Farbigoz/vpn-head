@@ -106,9 +106,12 @@ def main() -> int:
             raise SystemExit(f"Не удалось создать {kind}/{name}")
         return found
 
-    # Пустое окружение (обязательно для шаблонов в Semaphore v2.10+)
+    # Пустое окружение (обязательно для шаблонов в Semaphore v2.10+).
+    # ANSIBLE_CONFIG нужен, потому что Semaphore клонирует репозиторий
+    # во временный каталог и запускает ansible-playbook от его корня.
     env = find_or_create("environment", "default",
-                         {"name": "default", "json": "{}", "project_id": pid})
+                         {"name": "default", "json": "{}", "project_id": pid,
+                          "env": {"ANSIBLE_CONFIG": "ansible/ansible.cfg"}})
     print(f"· Окружение default: id={env['id']}")
 
     # Ключ: пароль Ansible Vault (из env VAULT_PASSWORD или /root/.vault-pass)

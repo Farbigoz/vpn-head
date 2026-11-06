@@ -69,6 +69,12 @@ echo "==> Разворачиваю дирижёр (Docker, Semaphore, Uptime Kum
 cd ansible
 ansible-playbook -i "inventories/$NAME" playbooks/00-setup-conductor.yml -c local
 
+# --- 7. Шаблоны задач в Web UI ---
+echo "==> Создаю проект и шаблоны задач в Semaphore"
+cd "$INSTALL_DIR"
+./.venv/bin/python scripts/conductor-seed.py --inventory "$NAME" || \
+  echo "ВНИМАНИЕ: засев Semaphore не удался — повторите позже: ./scripts/conductor-seed.py --inventory $NAME"
+
 cat <<EOF
 
 ══ Установка завершена ══
