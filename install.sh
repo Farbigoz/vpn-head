@@ -67,7 +67,7 @@ fi
 # --- 6. Дирижёр ---
 echo "==> Разворачиваю дирижёр (Docker, Semaphore, Uptime Kuma, 3x-ui master)"
 cd ansible
-ansible-playbook -i "inventories/$NAME" playbooks/00-setup-conductor.yml -c local --limit conductor
+ansible-playbook -i "inventories/$NAME" playbooks/00-setup-conductor.yml -c local
 
 cat <<EOF
 

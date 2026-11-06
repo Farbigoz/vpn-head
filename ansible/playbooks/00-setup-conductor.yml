@@ -5,7 +5,7 @@
 #
 # Запуск вручную (если не через install.sh):
 #   ansible-playbook -i inventories/<имя> playbooks/00-setup-conductor.yml \
-#     -c local --limit conductor
+#     -c local
 
 - name: "00: развёртывание дирижёра"
   hosts: conductor

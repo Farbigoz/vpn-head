@@ -93,7 +93,7 @@ systemctl restart networking     # Debian
 
 ### 2. Обновите инвентарь
 
-В `inventories/<имя>/nodes.d/<нода>.yml` поправьте `ansible_host` на
+В `inventories/<имя>/<нода>.yml` поправьте `ansible_host` на
 новый IP (или пересоздайте ноду шаблоном Semaphore «Добавить ноду»
 под новым именем файла — старый файл удалите).
 

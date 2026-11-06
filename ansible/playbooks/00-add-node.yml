@@ -1,5 +1,5 @@
 ---
-# 00a — Добавить ноду в инвентарь (создаёт nodes.d/<имя>.yml).
+# 00a — Добавить ноду в инвентарь (создаёт файл <имя>.yml в каталоге инвентаря).
 # Основной сценарий — запуск из Web UI Semaphore: шаблон «Добавить ноду»
 # с survey-полями node_name / node_ip / node_fqdn / inventory_name.
 # Из терминала:
@@ -26,7 +26,7 @@
 
     - name: Проверить, что нода ещё не добавлена
       ansible.builtin.stat:
-        path: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/nodes.d/{{ node_name }}.yml"
+        path: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/{{ node_name }}.yml"
       register: node_file
 
     - name: Остановиться, если файл ноды уже существует
@@ -34,10 +34,10 @@
         msg: "Нода {{ node_name }} уже есть в инвентаре ({{ node_file.stat.path }})."
       when: node_file.stat.exists
 
-    - name: Создать файл ноды nodes.d/{{ node_name }}.yml
+    - name: Создать файл ноды {{ node_name }}.yml
       ansible.builtin.template:
         src: templates/node-inventory.yml.j2
-        dest: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/nodes.d/{{ node_name }}.yml"
+        dest: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/{{ node_name }}.yml"
         mode: "0644"
 
     - name: Что дальше

@@ -12,7 +12,7 @@ Web UI как основной путь, установка одной стро�
 - `00-setup-conductor` + роли `docker`, `conductor_stack`, `xui_master`:
   Semaphore, Uptime Kuma, 3x-ui master на дирижёре.
 - `00-add-node` — добавление ноды из Web UI (survey) или CLI;
-  инвентарь перестроен на формат `nodes.d/<нода>.yml` (файл на ноду).
+  инвентарь: по файлу `<нода>.yml` на ноду в каталоге инвентаря.
 - Сценарий «смена IP на том же VPS»: процедура в
   `docs/node-replacement.md` + шаблон «Сменить IP ноды» в Semaphore.
 - `scripts/conductor-seed.py` — засев проекта и шаблонов задач

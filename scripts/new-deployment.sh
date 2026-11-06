@@ -34,7 +34,7 @@ rm -f "$INV_DIR/$NAME/group_vars/all/vault.example.yml"
 
 # Ноды: шаблонные удаляем; свои можно вписать сейчас или добавить
 # позже через Web UI (шаблон «Добавить ноду»)
-rm -f "$INV_DIR/$NAME/nodes.d"/n*.yml
+rm -f "$INV_DIR/$NAME"/n?.yml
 
 if [ "$CONDUCTOR_ONLY" != "--conductor-only" ]; then
   read -rp "Добавить ноды сейчас? [y/N]: " ADD_NODES
@@ -44,7 +44,7 @@ if [ "$CONDUCTOR_ONLY" != "--conductor-only" ]; then
       [ -n "$NODE_NAME" ] || continue
       read -rp "  IP $NODE_NAME: " NODE_IP
       read -rp "  FQDN $NODE_NAME (напр. $NODE_NAME.$DOMAIN): " NODE_FQDN
-      cat > "$INV_DIR/$NAME/nodes.d/$NODE_NAME.yml" <<EOF
+      cat > "$INV_DIR/$NAME/$NODE_NAME.yml" <<EOF
 ---
 vpn_nodes:
   hosts:
@@ -53,7 +53,7 @@ vpn_nodes:
       ansible_user: root
       node_fqdn: $NODE_FQDN
 EOF
-      echo "  -> $INV_DIR/$NAME/nodes.d/$NODE_NAME.yml"
+      echo "  -> $INV_DIR/$NAME/$NODE_NAME.yml"
     done
   fi
 fi

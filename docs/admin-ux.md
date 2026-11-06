@@ -45,7 +45,7 @@ ansible-playbook -i inventories/<имя> playbooks/00-add-node.yml \
 ansible-playbook -i inventories/<имя> playbooks/01-prepare-node.yml --limit n3
 ```
 
-Инвентарь — это файлы `inventories/<имя>/nodes.d/<нода>.yml`
+Инвентарь — это файлы `inventories/<имя>/<нода>.yml`
 (один файл на ноду): их можно править руками, UI и CLI не конфликтуют.
 
 ### Посмотреть доступы
@@ -74,7 +74,7 @@ Uptime Kuma (`:3001`): мониторы на каждую ноду по всем
 
 1. Сделайте новый IP постоянным в ОС (netplan/interfaces — см.
    `docs/node-replacement.md`, раздел «Смена IP на том же VPS»).
-2. Обновите `ansible_host` в `inventories/<имя>/nodes.d/<нода>.yml`.
+2. Обновите `ansible_host` в `inventories/<имя>/<нода>.yml`.
 3. В Semaphore запустите шаблон **«Сменить IP ноды»** — та же защита,
    что у переключения DNS (проверка старого IP + подтверждение).
 

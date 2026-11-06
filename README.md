@@ -31,7 +31,7 @@
 │   ├── playbooks/      # 00-setup-conductor, 00-add-node,
 │   │                   # 01-prepare-node … 04-switch-dns
 │   ├── roles/          # common, xui_node, xui_master, docker, conductor_stack
-│   └── inventories/    # example/ — шаблон; ноды = nodes.d/<имя>.yml
+│   └── inventories/    # example/ — шаблон; ноды = <имя>.yml в каталоге
 ├── scripts/            # bootstrap, new-deployment, gen-client-config,
 │                       # show-access, self-update, conductor-seed
 ├── clients/            # пример описания клиентов, сюда же вывод генератора
