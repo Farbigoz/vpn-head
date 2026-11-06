@@ -61,24 +61,28 @@
     rule: allow
     port: "{{ vless_tcp_port }}"
     proto: tcp
+  when: open_vpn_ports | default(true) | bool
 
 - name: Открыть Hysteria2 UDP
   community.general.ufw:
     rule: allow
     port: "{{ hysteria2_port }}"
     proto: udp
+  when: open_vpn_ports | default(true) | bool
 
 - name: Открыть VLESS XHTTP (запасной транспорт)
   community.general.ufw:
     rule: allow
     port: "{{ xhttp_port }}"
     proto: tcp
+  when: open_vpn_ports | default(true) | bool
 
 - name: Открыть AWG UDP
   community.general.ufw:
     rule: allow
     port: "{{ awg_port }}"
     proto: udp
+  when: open_vpn_ports | default(true) | bool
 
 - name: Панель 3x-ui — только для дирижёра
   community.general.ufw:
@@ -86,6 +90,7 @@
     proto: tcp
     port: "{{ xui_panel_port }}"
     from_ip: "{{ xui_panel_allowed_from }}"
+  when: open_vpn_ports | default(true) | bool
 
 - name: Включить UFW с запретом входящих по умолчанию
   community.general.ufw:

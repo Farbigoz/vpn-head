@@ -19,6 +19,7 @@
         fail_msg: "Поддерживаются Debian/Ubuntu. Обнаружено: {{ ansible_facts.distribution }}"
 
   roles:
+    - common          # SSH/UFW/Fail2ban/MOTD (VPN-порты выключены: open_vpn_ports=false)
     - docker
     - conductor_stack
     - xui_master

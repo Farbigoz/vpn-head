@@ -15,6 +15,9 @@ semaphore_port: 3000
 kuma_port: 3001
 xui_master_port: 2053
 
+# Дирижёр не пропускает VPN-трафик — VPN-порты в UFW не открываем
+open_vpn_ports: false
+
 # Кому открыть веб-интерфейсы Semaphore/Kuma в UFW (кроме SSH-туннеля).
 # Пустой список = никому (рекомендуется). Пример: ["203.0.113.5"]
 conductor_ui_allowed_from: []
