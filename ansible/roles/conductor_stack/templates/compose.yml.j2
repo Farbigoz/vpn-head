@@ -19,6 +19,8 @@ services:
       SEMAPHORE_WEB_ROOT: "/"
     volumes:
       - semaphore-data:/var/lib/semaphore
+      # Репозиторий vpn-head — шаблоны Ansible внутри Web UI
+      - /opt/vpn-head:/repo:ro
 
   uptime-kuma:
     image: louislam/uptime-kuma:{{ kuma_version }}

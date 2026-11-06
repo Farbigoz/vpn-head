@@ -1,5 +1,5 @@
 ---
-# Создано плейбуком 00-add-node ({{ ansible_date_time.date | default('') }}).
+# Создано плейбуком 00-add-node ({{ lookup('ansible.builtin.pipe', 'date +%Y-%m-%d') }}).
 vpn_nodes:
   hosts:
     {{ node_name }}:
