@@ -1,0 +1,10 @@
+---
+# Нода n1. Формат: один файл на ноду (nodes.d/<имя>.yml).
+# Добавить новую: скопируйте файл или запустите плейбук 00-add-node
+# (в Web UI Semaphore — шаблон «Добавить ноду»).
+vpn_nodes:
+  hosts:
+    n1:
+      ansible_host: 203.0.113.10      # замените на реальный IP VPS
+      ansible_user: root
+      node_fqdn: n1.vpn.example.com

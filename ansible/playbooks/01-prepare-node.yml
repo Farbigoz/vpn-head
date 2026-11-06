@@ -1,0 +1,51 @@
+---
+# 01 — Первичная настройка VPS как VPN-ноды.
+# Делает: пакеты, админ-пользователь, SSH по ключам, UFW, Fail2ban,
+#         3x-ui зафиксированной версии.
+# НЕ делает: DNS-изменений, подключения к master, восстановления конфигурации.
+#
+# Запуск:
+#   ansible-playbook -i inventories/<имя>/hosts.yml playbooks/01-prepare-node.yml --limit n1
+#
+# Перед запуском проверьте docs/node-replacement.md и получите
+# подтверждение владельца инфраструктуры.
+
+- name: "01: подготовка VPN-ноды"
+  hosts: vpn_nodes
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Проверить поддерживаемую ОС
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.os_family == 'Debian'
+        fail_msg: "Поддерживаются Debian/Ubuntu. Обнаружено: {{ ansible_facts.distribution }}"
+
+    - name: Напоминание о запретных действиях
+      ansible.builtin.debug:
+        msg: >-
+          DNS-записи этот плейбук не меняет. Убедитесь, что FQDN ноды
+          ({{ node_fqdn }}) пока НЕ указывает на этот сервер.
+
+  roles:
+    - common
+    - xui_node
+
+  post_tasks:
+    - name: Сохранить карточку доступа к ноде локально (без секретов)
+      ansible.builtin.template:
+        src: templates/node-report.yml.j2
+        dest: "{{ playbook_dir }}/../../reports/{{ inventory_hostname }}.yml"
+        mode: "0640"
+      delegate_to: localhost
+      become: false
+
+    - name: Показать, где лежат доступы
+      ansible.builtin.debug:
+        msg: >-
+          Нода {{ inventory_hostname }} подготовлена. Карточка:
+          reports/{{ inventory_hostname }}.yml. Панель:
+          http://{{ node_fqdn }}:{{ xui_panel_port }}/{{ xui_panel_path }}/
+          (только для дирижёра). Учётные данные — в Vault
+          (сводка: scripts/show-access.py).

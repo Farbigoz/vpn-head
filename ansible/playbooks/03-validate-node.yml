@@ -1,0 +1,79 @@
+---
+# 03 — Canary-проверки ноды перед переключением DNS.
+# Проверяет: DNS (canary-поддомен), доступность портов протоколов,
+# панель ноды с адреса дирижёра. Проверка реального трафика — отдельным
+# шагом (требует тестового клиента), см. TODO ниже.
+#
+# Запуск с дирижёра или локального ПК:
+#   ansible-playbook -i inventories/<имя>/hosts.yml playbooks/03-validate-node.yml --limit n1 \
+#     -e "node_ip=203.0.113.10"
+
+- name: "03: проверка ноды перед переключением DNS"
+  hosts: vpn_nodes
+  gather_facts: false
+
+  tasks:
+    - name: Проверить, что задан IP новой ноды
+      ansible.builtin.assert:
+        that: node_ip is defined
+        fail_msg: "Передайте -e node_ip=<IP нового VPS>"
+
+    - name: Canary-поддомен резолвится в IP новой ноды
+      # Перед проверкой вручную создайте canary-запись:
+      #   canary-{{ inventory_hostname }}.{{ infra_domain }} A {{ node_ip }}
+      ansible.builtin.command: "dig +short canary-{{ inventory_hostname }}.{{ infra_domain }} A"
+      delegate_to: localhost
+      register: canary_dns
+      changed_when: false
+
+    - name: Canary DNS указывает на новую ноду
+      ansible.builtin.assert:
+        that: node_ip in canary_dns.stdout_lines
+        fail_msg: >-
+          canary-{{ inventory_hostname }}.{{ infra_domain }} не резолвится
+          в {{ node_ip }} (получено: {{ canary_dns.stdout_lines }})
+
+    - name: Порт VLESS TCP доступен снаружи
+      ansible.builtin.wait_for:
+        host: "{{ node_ip }}"
+        port: "{{ vless_tcp_port }}"
+        timeout: 10
+      delegate_to: localhost
+
+    - name: Порт XHTTP доступен снаружи
+      ansible.builtin.wait_for:
+        host: "{{ node_ip }}"
+        port: "{{ xhttp_port }}"
+        timeout: 10
+      delegate_to: localhost
+
+    - name: Панель ноды НЕ доступна снаружи (кроме дирижёра)
+      ansible.builtin.wait_for:
+        host: "{{ node_ip }}"
+        port: "{{ xui_panel_port }}"
+        timeout: 5
+        state: stopped
+      delegate_to: localhost
+      failed_when: false
+      register: panel_closed
+
+    - name: Предупреждение, если панель видна снаружи
+      ansible.builtin.debug:
+        msg: "ВНИМАНИЕ: порт панели {{ xui_panel_port }} доступен извне. Проверьте UFW (conductor_ip)."
+      when: panel_closed.state | default('stopped') != 'stopped'
+
+    # TODO(требует тестового клиента на дирижёре или локальном ПК):
+    # реальные проверки трафика через canary-FQDN для каждого протокола:
+    #   xray run -c canary-vless.json + curl через socks-инбаунд,
+    #   hysteria2-клиент, amneziawg quick + ping.
+    - name: TODO — проверка реального трафика по всем протоколам
+      ansible.builtin.debug:
+        msg: >-
+          Автоматическая проверка трафика — следующий шаг реализации.
+          До её готовности: проверьте canary-конфиги вручную на тестовом
+          клиенте (VLESS, XHTTP, Hysteria2, AWG) и только потом переходите
+          к 04-switch-dns.
+
+    - name: Итог проверки
+      ansible.builtin.debug:
+        msg: "Нода {{ inventory_hostname }} ({{ node_ip }}): DNS и порты в порядке. Не переходите к 04 без проверки трафика."

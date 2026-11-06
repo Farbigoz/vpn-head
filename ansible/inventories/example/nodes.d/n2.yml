@@ -1,0 +1,7 @@
+---
+vpn_nodes:
+  hosts:
+    n2:
+      ansible_host: 203.0.113.20      # замените на реальный IP VPS
+      ansible_user: root
+      node_fqdn: n2.vpn.example.com

@@ -1,0 +1,24 @@
+---
+# 00 — Развёртывание дирижёра (запускается install.sh на самом дирижёре,
+# локально). Ставит: Docker, Semaphore (Web UI), Uptime Kuma, 3x-ui master.
+# В конце выводит все доступы в терминал и сохраняет в credentials_file.
+#
+# Запуск вручную (если не через install.sh):
+#   ansible-playbook -i inventories/<имя> playbooks/00-setup-conductor.yml \
+#     -c local --limit conductor
+
+- name: "00: развёртывание дирижёра"
+  hosts: conductor
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Проверить поддерживаемую ОС
+      ansible.builtin.assert:
+        that: ansible_facts.os_family == 'Debian'
+        fail_msg: "Поддерживаются Debian/Ubuntu. Обнаружено: {{ ansible_facts.distribution }}"
+
+  roles:
+    - docker
+    - conductor_stack
+    - xui_master

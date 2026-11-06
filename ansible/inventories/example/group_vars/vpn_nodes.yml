@@ -1,0 +1,6 @@
+---
+# Параметры VPN-нод (НЕ секреты).
+
+# UFW: панель 3x-ui открываем только дирижёру.
+# conductor_ip берётся из инвентаря (хост conductor).
+xui_panel_allowed_from: "{{ hostvars[groups['conductor'][0]]['conductor_ip'] | default('127.0.0.1') }}"

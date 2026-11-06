@@ -1,0 +1,28 @@
+---
+# ПРИМЕР. Реальный файл создаётся командой:
+#   ansible-vault create ansible/inventories/<имя>/group_vars/all/vault.yml
+# и НЕ коммитится в открытом виде.
+
+# Публичные SSH-ключи администраторов (populates authorized_keys на нодах)
+vault_admin_ssh_public_keys:
+  - "ssh-ed25519 AAAA... user@host"
+
+# REG.RU API (для acme.sh DNS-01 и плейбука 04-switch-dns)
+vault_regru_username: "your-reg-login"
+vault_regru_password: "your-reg-password"
+
+# Учётные данные панелей 3x-ui нод (задаются при join ноды)
+vault_xui_node_user: "panel-admin"
+vault_xui_node_password: "long-random-password"
+
+# Учётные данные master 3x-ui на дирижёре
+vault_xui_master_user: "master-admin"
+vault_xui_master_password: "long-random-password"
+
+# Администратор Semaphore (Web UI дирижёра). Пароль можно не задавать —
+# при установке будет сгенерирован и сохранён в credentials_file на дирижёре.
+vault_semaphore_admin_user: "admin"
+# vault_semaphore_admin_password: "если не задан — сгенерируется"
+
+# Парольная фраза Hysteria2 (общая или на клиента — см. docs/client-failover.md)
+vault_hysteria2_password: "long-random-password"

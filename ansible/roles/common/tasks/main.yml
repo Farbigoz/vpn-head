@@ -1,0 +1,117 @@
+---
+# Базовая настройка VPS: пакеты, пользователь, SSH, UFW, Fail2ban.
+# DNS здесь не трогаем (см. docs/node-replacement.md).
+
+- name: Обновить кэш apt и установить базовые пакеты
+  ansible.builtin.apt:
+    name:
+      - ufw
+      - fail2ban
+      - curl
+      - wget
+      - jq
+      - ca-certificates
+      - unattended-upgrades
+    state: present
+    update_cache: true
+
+- name: Установить часовой пояс
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Создать административного пользователя
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    shell: /bin/bash
+    groups: sudo
+    append: true
+    create_home: true
+
+- name: Разрешить sudo без пароля для администратора
+  ansible.builtin.copy:
+    content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    dest: "/etc/sudoers.d/90-{{ admin_user }}"
+    mode: "0440"
+    validate: "visudo -cf %s"
+
+- name: Установить публичные SSH-ключи администратора
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    key: "{{ item }}"
+  loop: "{{ admin_ssh_public_keys }}"
+  when: admin_ssh_public_keys | length > 0
+
+- name: Применить параметры sshd (drop-in)
+  ansible.builtin.template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/99-vpn-head.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Перезапустить sshd
+
+- name: Разрешить SSH в UFW (с rate-limit против брутфорса)
+  community.general.ufw:
+    rule: limit
+    port: "{{ ssh_port }}"
+    proto: tcp
+
+- name: Открыть VLESS TCP (основной профиль)
+  community.general.ufw:
+    rule: allow
+    port: "{{ vless_tcp_port }}"
+    proto: tcp
+
+- name: Открыть Hysteria2 UDP
+  community.general.ufw:
+    rule: allow
+    port: "{{ hysteria2_port }}"
+    proto: udp
+
+- name: Открыть VLESS XHTTP (запасной транспорт)
+  community.general.ufw:
+    rule: allow
+    port: "{{ xhttp_port }}"
+    proto: tcp
+
+- name: Открыть AWG UDP
+  community.general.ufw:
+    rule: allow
+    port: "{{ awg_port }}"
+    proto: udp
+
+- name: Панель 3x-ui — только для дирижёра
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ xui_panel_port }}"
+    from_ip: "{{ xui_panel_allowed_from }}"
+
+- name: Включить UFW с запретом входящих по умолчанию
+  community.general.ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+
+- name: Установить jail Fail2ban для sshd
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Перезапустить fail2ban
+
+- name: Запустить и включить Fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: MOTD с краткой информацией о ноде
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: "0644"

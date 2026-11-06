@@ -1,0 +1,27 @@
+---
+# Параметры дирижёра (НЕ секреты). Дирижёр — отдельный VPS
+# (рекомендуется) или машина в homelab.
+
+# Версии компонентов дирижёра (зафиксированы).
+# VERIFY: перед первым применением сверить с релизами:
+#   https://github.com/semaphoreui/semaphore/releases
+#   https://github.com/louislam/uptime-kuma/releases
+semaphore_version: "2.10.22"
+kuma_version: "1.23.13"
+
+# Порты веб-интерфейсов (по умолчанию слушают только 127.0.0.1,
+# доступ — через SSH-туннель, см. docs/admin-ux.md)
+semaphore_port: 3000
+kuma_port: 3001
+xui_master_port: 2053
+
+# Кому открыть веб-интерфейсы Semaphore/Kuma в UFW (кроме SSH-туннеля).
+# Пустой список = никому (рекомендуется). Пример: ["203.0.113.5"]
+conductor_ui_allowed_from: []
+
+# Каталог docker-compose стека дирижёра и файл с доступами
+stack_dir: "/opt/vpn-head-stack"
+credentials_file: "/root/.vpn-head/credentials.txt"
+
+# Каталог резервных копий на дирижёре (база 3x-ui, конфиги, ключи)
+backup_dir: "/srv/vpn-head/backups"

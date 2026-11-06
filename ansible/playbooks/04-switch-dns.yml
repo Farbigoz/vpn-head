@@ -1,0 +1,122 @@
+---
+# 04 — Полуавтоматическая смена A-записи ноды у REG.RU.
+#
+# Жёсткие правила (см. docs/node-replacement.md и docs/security.md):
+# - запускается ТОЛЬКО после успешного 03-validate-node и ручного
+#   подтверждения владельца;
+# - перед изменением проверяет, что текущая A-запись равна expected_old_ip;
+# - идемпотентен: если запись уже указывает на new_ip — ничего не меняет;
+# - старый VPS после переключения не удалять.
+#
+# Секреты REG.RU берутся из vault (vault_regru_username / vault_regru_password).
+#
+# ВНИМАНИЕ: точные имена функций и полей REG.RU API перед боевым запуском
+# сверьте с актуальной документацией https://www.reg.ru/support/help/api2 —
+# используемые ниже вызовы помечены комментариями # VERIFY.
+#
+# Запуск:
+#   ansible-playbook -i inventories/<имя>/hosts.yml playbooks/04-switch-dns.yml \
+#     -e "node_fqdn=n1.vpn.example.com expected_old_ip=203.0.113.10 new_ip=203.0.113.99"
+
+- name: "04: смена A-записи REG.RU после ручного подтверждения"
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    regru_api: "https://api.reg.ru/api/regru2"
+    regru_auth:
+      username: "{{ vault_regru_username }}"
+      password: "{{ vault_regru_password }}"
+      output_format: json
+      input_format: json
+    record_name: "{{ node_fqdn.split('.')[0] }}"   # 'n1'
+    zone: "{{ infra_domain }}"                     # 'vpn.example.com'
+
+  tasks:
+    - name: Проверить обязательные параметры
+      ansible.builtin.assert:
+        that:
+          - node_fqdn is defined
+          - expected_old_ip is defined
+          - new_ip is defined
+          - new_ip != expected_old_ip
+        fail_msg: "Нужны -e node_fqdn=... expected_old_ip=... new_ip=... (и new != old)"
+
+    - name: "VERIFY: получить текущие ресурсные записи зоны"
+      ansible.builtin.uri:
+        url: "{{ regru_api }}/zone/get_resource_records"
+        method: POST
+        body_format: json
+        body:
+          username: "{{ regru_auth.username }}"
+          password: "{{ regru_auth.password }}"
+          output_format: json
+          domains: [{ dname: "{{ zone }}" }]
+      register: regru_records
+      no_log: true   # ответ может содержать детали учётной записи
+
+    # TODO(VERIFY): извлечь A-запись record_name из структуры ответа REG.RU;
+    # точная схема ответа зависит от версии API.
+    - name: Показать полученные записи для ручной сверки
+      ansible.builtin.debug:
+        msg: "Ответ REG.RU получен (скрыт no_log). TODO: распарсить A-запись {{ record_name }} по актуальной схеме API."
+
+    - name: "Подтверждение оператором"
+      ansible.builtin.pause:
+        prompt: >-
+          ПЕРЕКЛЮЧЕНИЕ DNS: {{ node_fqdn }}: {{ expected_old_ip }} -> {{ new_ip }}.
+          Убедитесь, что 03-validate-node пройден (включая ручную проверку трафика),
+          а текущая A-запись действительно {{ expected_old_ip }}.
+          Введите "switch" для продолжения
+      register: dns_confirm
+
+    - name: Прервать, если подтверждение не получено
+      ansible.builtin.fail:
+        msg: "Переключение отменено оператором."
+      when: dns_confirm.user_input != 'switch'
+
+    - name: "VERIFY: обновить A-запись (идемпотентно)"
+      # Предполагаемый вызов — zone/update_records с action_list:
+      # удалить старую A-запись и добавить новую. Перед боевым запуском
+      # сверить со схемой REG.RU API и добавить проверку expected_old_ip
+      # в теле условия (защита от гонок).
+      ansible.builtin.uri:
+        url: "{{ regru_api }}/zone/update_records"
+        method: POST
+        body_format: json
+        body:
+          username: "{{ regru_auth.username }}"
+          password: "{{ regru_auth.password }}"
+          output_format: json
+          input_format: json
+          domain_name: "{{ zone }}"
+          action_list:
+            - action: remove_record
+              record_type: A
+              subdomain: "{{ record_name }}"
+              content: "{{ expected_old_ip }}"
+            - action: add_alias
+              subdomain: "{{ record_name }}"
+              ipaddr: "{{ new_ip }}"
+      register: regru_update
+      no_log: true
+
+    - name: Проверить ответ API
+      ansible.builtin.assert:
+        that: regru_update.status == 200
+        fail_msg: "REG.RU API вернул HTTP {{ regru_update.status }} — DNS мог не измениться. Проверьте вручную."
+
+    - name: Контрольная проверка DNS (может занять время из-за TTL/кэшей)
+      ansible.builtin.command: "dig +short {{ node_fqdn }} A"
+      register: dns_check
+      retries: 12
+      delay: 10
+      until: new_ip in dns_check.stdout_lines
+      changed_when: false
+
+    - name: Итог
+      ansible.builtin.debug:
+        msg: >-
+          {{ node_fqdn }} теперь указывает на {{ new_ip }}.
+          Не удаляйте старый VPS ({{ expected_old_ip }}) — держите его
+          как минимум несколько дней на случай отката.

@@ -1,0 +1,33 @@
+# Управляется Ansible (vpn-head, роль conductor_stack). Не редактировать вручную.
+name: vpn-head
+
+services:
+  semaphore:
+    image: semaphoreui/semaphore:v{{ semaphore_version }}
+    restart: unless-stopped
+    ports:
+      # Web UI слушает localhost — доступ через SSH-туннель
+      # (см. docs/admin-ux.md). Наружу открывает UFW только если
+      # задан conductor_ui_allowed_from.
+      - "127.0.0.1:{{ semaphore_port }}:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: bolt
+      SEMAPHORE_ADMIN: "{{ vault_semaphore_admin_user | default('admin') }}"
+      SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore_admin_password }}"
+      SEMAPHORE_ADMIN_NAME: "vpn-head admin"
+      SEMAPHORE_ADMIN_EMAIL: "{{ semaphore_admin_email | default('admin@localhost') }}"
+      SEMAPHORE_WEB_ROOT: "/"
+    volumes:
+      - semaphore-data:/var/lib/semaphore
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:{{ kuma_version }}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:{{ kuma_port }}:3001"
+    volumes:
+      - kuma-data:/app/data
+
+volumes:
+  semaphore-data:
+  kuma-data:

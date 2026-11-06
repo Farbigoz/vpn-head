@@ -1,0 +1,71 @@
+---
+# Стек дирижёра: Semaphore (Web UI для Ansible) + Uptime Kuma (мониторинг).
+# Учётные данные выводятся в конце установки и сохраняются в credentials_file.
+
+- name: Создать каталоги стека
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+  loop:
+    - "{{ stack_dir }}"
+    - "/root/.vpn-head"
+
+- name: Пароль администратора Semaphore (из vault или сгенерирован однократно)
+  ansible.builtin.set_fact:
+    semaphore_admin_password: >-
+      {{ vault_semaphore_admin_password | default(
+           lookup('ansible.builtin.password',
+                  '/root/.vpn-head/.semaphore_admin_pw chars=ascii_letters,digits length=24'),
+           true) }}
+  no_log: true
+
+- name: Развернуть docker-compose стека
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ stack_dir }}/compose.yml"
+    mode: "0640"
+  no_log: true   # содержит пароль администратора Semaphore
+
+- name: Поднять стек
+  community.docker.docker_compose_v2:
+    project_src: "{{ stack_dir }}"
+    pull: policy
+  register: stack_up
+
+- name: UFW — Semaphore UI с разрешённых адресов (если заданы)
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ semaphore_port }}"
+    from_ip: "{{ item }}"
+  loop: "{{ conductor_ui_allowed_from }}"
+  when: conductor_ui_allowed_from | length > 0
+
+- name: UFW — Kuma UI с разрешённых адресов (если заданы)
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ kuma_port }}"
+    from_ip: "{{ item }}"
+  loop: "{{ conductor_ui_allowed_from }}"
+  when: conductor_ui_allowed_from | length > 0
+
+- name: Сохранить доступы дирижёра (права 600)
+  ansible.builtin.template:
+    src: credentials.txt.j2
+    dest: "{{ credentials_file }}"
+    mode: "0600"
+  no_log: true
+
+- name: Показать доступы в консоли установки
+  ansible.builtin.debug:
+    msg: |
+      ══ Дирижёр развёрнут ══
+      Semaphore (Web UI): http://127.0.0.1:{{ semaphore_port }}
+        логин: {{ vault_semaphore_admin_user | default('admin') }}
+        пароль: {{ semaphore_admin_password }}
+      Uptime Kuma: http://127.0.0.1:{{ kuma_port }} (мастер первичной настройки при первом входе)
+      3x-ui master: порт {{ xui_master_port }} (креды — vault_xui_master_*)
+      Доступ с локального ПК: ssh -L {{ semaphore_port }}:127.0.0.1:{{ semaphore_port }} -L {{ kuma_port }}:127.0.0.1:{{ kuma_port }} <дирижёр>
+      Копия доступов: {{ credentials_file }} (права 600, только root)
