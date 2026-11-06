@@ -156,6 +156,7 @@ def main() -> int:
     for name, playbook, survey in templates:
         tpl = find_or_create("templates", name, {
             "name": name, "project_id": pid, "playbook": playbook,
+            "app": "ansible",
             "inventory_id": inv["id"], "repository_id": repo["id"],
             "environment_id": env["id"],
             "vaults": [{"vault_key_id": vault_key["id"], "type": "password",
