@@ -111,7 +111,7 @@ def main() -> int:
     # во временный каталог и запускает ansible-playbook от его корня.
     env = find_or_create("environment", "default",
                          {"name": "default", "json": "{}", "project_id": pid,
-                          "env": {"ANSIBLE_CONFIG": "ansible/ansible.cfg"}})
+                          "env": json.dumps({"ANSIBLE_CONFIG": "ansible/ansible.cfg"})})
     print(f"· Окружение default: id={env['id']}")
 
     # Ключ: пароль Ansible Vault (из env VAULT_PASSWORD или /root/.vault-pass)
