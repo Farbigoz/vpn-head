@@ -21,6 +21,7 @@
 - name: "04: смена A-записи REG.RU после ручного подтверждения"
   hosts: localhost
   gather_facts: false
+  become: false   # в контейнере Semaphore нет sudo
 
   vars:
     regru_api: "https://api.reg.ru/api/regru2"

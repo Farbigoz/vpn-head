@@ -36,7 +36,7 @@
     - name: Сохранить карточку доступа к ноде локально (без секретов)
       ansible.builtin.template:
         src: templates/node-report.yml.j2
-        dest: "{{ playbook_dir }}/../../reports/{{ inventory_hostname }}.yml"
+        dest: "{{ reports_dir | default(playbook_dir + '/../../reports') }}/{{ inventory_hostname }}.yml"
         mode: "0640"
       delegate_to: localhost
       become: false

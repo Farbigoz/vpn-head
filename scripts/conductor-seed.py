@@ -109,8 +109,14 @@ def main() -> int:
     # Пустое окружение (обязательно для шаблонов в Semaphore v2.10+).
     # ANSIBLE_CONFIG нужен, потому что Semaphore клонирует репозиторий
     # во временный каталог и запускает ansible-playbook от его корня.
+    # inventory_repo_path/reports_dir — куда писать файлы нод и карточки
+    # (временный клон Semaphore после задачи исчезает).
     env = find_or_create("environment", "default",
-                         {"name": "default", "json": "{}", "project_id": pid,
+                         {"name": "default", "project_id": pid,
+                          "json": json.dumps({
+                              "inventory_repo_path": "/repo/ansible/inventories",
+                              "reports_dir": "/repo/reports",
+                          }),
                           "env": json.dumps({"ANSIBLE_CONFIG": "ansible/ansible.cfg"})})
     print(f"· Окружение default: id={env['id']}")
 

@@ -12,6 +12,12 @@
 - name: "00a: добавить ноду в инвентарь"
   hosts: localhost
   gather_facts: false
+  become: false   # в контейнере Semaphore нет sudo
+
+  vars:
+    # В Semaphore playbook работает во временном клоне — писать надо
+    # в настоящий репозиторий (/repo, смонтирован rw). Локально — рядом.
+    inv_base: "{{ inventory_repo_path | default(playbook_dir + '/../inventories') }}"
 
   tasks:
     - name: Проверить обязательные параметры
@@ -26,7 +32,7 @@
 
     - name: Проверить, что нода ещё не добавлена
       ansible.builtin.stat:
-        path: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/{{ node_name }}.yml"
+        path: "{{ inv_base }}/{{ inventory_name }}/{{ node_name }}.yml"
       register: node_file
 
     - name: Остановиться, если файл ноды уже существует
@@ -37,7 +43,7 @@
     - name: Создать файл ноды {{ node_name }}.yml
       ansible.builtin.template:
         src: templates/node-inventory.yml.j2
-        dest: "{{ playbook_dir }}/../inventories/{{ inventory_name }}/{{ node_name }}.yml"
+        dest: "{{ inv_base }}/{{ inventory_name }}/{{ node_name }}.yml"
         mode: "0644"
 
     - name: Что дальше

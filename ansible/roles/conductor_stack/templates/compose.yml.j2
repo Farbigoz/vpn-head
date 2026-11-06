@@ -28,8 +28,11 @@ services:
       GIT_CONFIG_VALUE_0: "*"
     volumes:
       - semaphore-data:/var/lib/semaphore
-      # Репозиторий vpn-head — шаблоны Ansible внутри Web UI
-      - /opt/vpn-head:/repo:ro
+      # Репозиторий vpn-head — шаблоны Ansible внутри Web UI.
+      # rw: задачи пишут файлы нод и карточки в репозиторий.
+      - /opt/vpn-head:/repo
+    # Контейнеру нужно писать в /repo (владелец на хосте — root)
+    user: "0:0"
 
   uptime-kuma:
     image: louislam/uptime-kuma:{{ kuma_version }}
