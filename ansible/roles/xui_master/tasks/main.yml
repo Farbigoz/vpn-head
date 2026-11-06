@@ -18,6 +18,13 @@
     /usr/local/x-ui/x-ui setting -port {{ xui_master_port }}
     -webBasePath {{ xui_panel_path }}/
   register: xui_master_setting
+
+- name: Установить учётные данные панели master из vault
+  ansible.builtin.command: >-
+    /usr/local/x-ui/x-ui setting -username {{ vault_xui_master_user }}
+    -password {{ vault_xui_master_password }}
+  no_log: true   # пароль не должен попасть в лог
+  register: xui_master_creds
   changed_when: xui_master_setting.rc == 0
 
 - name: Перезапустить и включить x-ui (master)
